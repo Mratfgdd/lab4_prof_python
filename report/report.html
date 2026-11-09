@@ -1,0 +1,509 @@
+<!doctype html><html lang='uk'><head><meta charset='utf-8'><title>Звіт ЛР4</title><style>
+@page { size: A4; margin: 20mm 15mm 20mm 30mm;
+  @bottom-center { content: counter(page); font: 12pt "Times New Roman", serif; } }
+@page :first { @bottom-center { content: none; } }
+html { background: #fff; }
+body { margin: 0; color: #000; background: #fff; font-family: "Times New Roman", serif;
+  font-size: 14pt; line-height: 1.22; }
+p { margin: 0 0 2pt; text-indent: 1.25cm; text-align: justify; }
+h1 { font-size: 14pt; text-align: center; margin: 9pt 0 4pt; break-after: avoid; }
+h2 { font-size: 14pt; margin: 6pt 0 3pt; text-indent: 1.25cm; break-after: avoid; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 0.82em; }
+pre.code { font-family: Consolas, "Courier New", monospace; font-size: 8.2pt;
+  line-height: 1.13; margin: 3pt 0 5pt; padding: 3pt 8pt; white-space: pre-wrap;
+  background: #f6f6f4; border-left: 3px solid #c3c2b7; orphans: 4; widows: 4; }
+pre.keep { break-inside: avoid; }
+.term { font-family: Consolas, "Courier New", monospace; font-size: 7.4pt; line-height: 1.14;
+  white-space: pre-wrap; background: #0c0c0c; color: #d4d4d4; padding: 4pt 8pt;
+  border-radius: 4px; margin: 3pt 0 3pt; orphans: 4; widows: 4; }
+.term .ps { color: #f9f1a5; }
+table { width: 100%; border-collapse: collapse; font-size: 10.5pt; line-height: 1.13;
+  margin: 2pt 0 5pt; }
+th, td { border: 1px solid #000; padding: 1.5pt 4pt; vertical-align: top; text-align: left; }
+th { background: #f0efec; }
+tr { break-inside: avoid; }
+.tcap { text-indent: 0; text-align: left; margin: 4pt 0 2pt; break-after: avoid; }
+.fcap { text-indent: 0; text-align: center; margin: 3pt 0 5pt; }
+.figure { break-inside: avoid; margin: 2pt 0 0; }
+.figure svg { width: 100%; height: auto; }
+@page land { size: A4 landscape; margin: 12mm 15mm 14mm 20mm;
+  @bottom-center { content: counter(page); font: 12pt "Times New Roman", serif; } }
+.landscape { page: land; break-before: page; break-after: page; }
+.landscape h1 { margin-top: 0; }
+.landscape .figure svg { width: auto; height: 152mm; display: block; margin: 0 auto; }
+.title { height: 255mm; display: flex; flex-direction: column; justify-content: space-between;
+  text-align: center; break-after: page; line-height: 1.5; }
+.title .main { margin-top: 30mm; }
+.title .main .big { font-size: 20pt; font-weight: bold; letter-spacing: 2pt; }
+.title .main .theme { font-size: 16pt; font-weight: bold; margin-top: 10pt; }
+.title .sign { align-self: flex-end; text-align: left; width: 85mm; margin-top: 30mm; }
+.title .city { margin-top: auto; }
+</style></head><body>
+<section class="title">
+  <div>МІНІСТЕРСТВО ОСВІТИ І НАУКИ УКРАЇНИ<br>
+  Львівський національний університет імені Івана Франка</div>
+  <div class="main">
+    <div class="big">ЗВІТ</div>
+    <div>до лабораторної роботи №4</div>
+    <div>з дисципліни «Професійний Python»</div>
+    <div class="theme">Тема: «Професійне ООП та система типів Python»</div>
+  </div>
+  <div class="sign">Виконав:<br>студент Левандівський Назар<br><br>
+  Перевірив:<br>Куньо Іван Михайлович</div>
+  <div class="city">Львів – 2026</div>
+</section>
+<h1>Мета роботи</h1>
+<p>Сформувати навички побудови типізованої об'єктно-орієнтованої моделі предметної області: класи, композиція і наслідування, ABC та Protocol, dataclass і value objects, properties, dunder methods, принципи SOLID, dependency injection, generic classes, TypeVar, TypedDict і статична перевірка коду через mypy.</p>
+<h1>1. Предметна область і постановка задачі</h1>
+<p><b>Варіант 1. Система обліку студентів</b> (продовження ЛР1–ЛР3). Студент навчається в групі й має академічний запис – набір результатів із предметів; кожен результат складається з оцінки (0–100) і кількості кредитів. Студенти бувають бюджетні й контрактні, а стипендію отримують лише бюджетні з достатнім середнім балом. Оцінки зберігаються як <code>Decimal</code>, бо float дає похибки округлення. Спосіб обчислення середнього бала змінюється стратегією: простий, зважений за кредитами або середнє з кількох найкращих оцінок.</p>
+<p class="tcap">Таблиця 1 – Вимоги варіанта та їх реалізація</p>
+<table class=""><thead><tr><th>Вимога</th><th>Реалізація</th></tr></thead><tbody><tr><td>додавання та редагування даних студента</td><td><code>StudentService.register</code>, <code>edit</code>; <code>Student.edit</code> перевіряє нові значення до зміни стану</td></tr><tr><td>пошук за прізвищем/ID і групою</td><td><code>find_by_last_name</code> (без урахування регістру), <code>find_by_id</code>, <code>find_in_group</code></td></tr><tr><td>обчислення середнього бала</td><td><code>AcademicRecord.average(policy)</code> і стратегії <code>GradingPolicy</code></td></tr><tr><td>визначення найкращого студента</td><td><code>StudentRegistry.best_student(policy, group)</code>, <code>Group.best</code></td></tr><tr><td>repository</td><td><code>Repository[K, T]</code> (ABC) і <code>InMemoryRepository[K, T]</code></td></tr><tr><td>reporting service</td><td><code>ReportService</code>: summaries, ranking, group_report, card</td></tr><tr><td>notification abstraction</td><td><code>Notifier</code> (runtime_checkable Protocol) і адаптери <code>ConsoleNotifier</code>, <code>MemoryNotifier</code></td></tr></tbody></table>
+<p class="tcap">Таблиця 2 – Domain objects та інші класи моделі</p>
+<table class=""><thead><tr><th>Клас</th><th>Вид</th><th>Відповідальність</th></tr></thead><tbody><tr><td><code>Student</code>, <code>BudgetStudent</code>, <code>ContractStudent</code></td><td>dataclass, entity; підкласи</td><td>дані студента, ідентичність за id, стипендія</td></tr><tr><td><code>Group</code></td><td>entity, колекція</td><td>склад групи, середній бал, найкращий</td></tr><tr><td><code>AcademicRecord</code></td><td>custom collection</td><td>результати студента (один на предмет)</td></tr><tr><td><code>Grade</code>, <code>GroupCode</code>, <code>CourseResult</code></td><td>frozen value objects</td><td>оцінка 0–100; код групи PI-21; оцінка з предмета й кредитами</td></tr><tr><td><code>StudentRegistry</code></td><td>aggregate root</td><td>інваріанти: студент завжди в існуючій групі</td></tr><tr><td><code>GradingPolicy</code> і 3 підкласи</td><td>ABC, strategy</td><td>обчислення середнього бала</td></tr><tr><td><code>StudentService</code>, <code>ReportService</code></td><td>application services</td><td>сценарії та сповіщення; звітність</td></tr><tr><td><code>StudentError</code> і 6 підкласів</td><td>ієрархія винятків</td><td>доменні помилки</td></tr></tbody></table>
+<section class="landscape"><h1>2. Діаграма класів</h1><div class="figure"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 703" role="img" aria-label="UML class diagram"><style>.nm{font:bold 12.5px 'Segoe UI',Arial,sans-serif;text-anchor:middle;fill:#111}.st{font:italic 10px 'Segoe UI',Arial,sans-serif;text-anchor:middle;fill:#444}.mb{font:10.5px Consolas,'Courier New',monospace;fill:#222}.lb{font:italic 10px 'Segoe UI',Arial,sans-serif;fill:#333}</style>
+<defs>
+  <marker id="tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12"
+    markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L11,6 L0,12 z" fill="#fff"
+    stroke="#3d3d3a" stroke-width="1"/></marker>
+  <marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9"
+    markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L9,5 L0,10" fill="none"
+    stroke="#3d3d3a" stroke-width="1.2"/></marker>
+  <marker id="dfill" viewBox="0 0 16 10" refX="1" refY="5" markerWidth="16" markerHeight="10"
+    markerUnits="userSpaceOnUse" orient="auto"><path d="M1,5 L8,0.5 L15,5 L8,9.5 z"
+    fill="#3d3d3a"/></marker>
+  <marker id="dhollow" viewBox="0 0 16 10" refX="1" refY="5" markerWidth="16" markerHeight="10"
+    markerUnits="userSpaceOnUse" orient="auto"><path d="M1,5 L8,0.5 L15,5 L8,9.5 z" fill="#fff"
+    stroke="#3d3d3a" stroke-width="1"/></marker>
+</defs><g transform="translate(0,20)"><rect x="10" y="10" width="300" height="158" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="10" y="10" width="300" height="34" rx="3" fill="#eaf6ef" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="160.0" y="23" class="st">«application service»</text>
+<text x="160.0" y="38" class="nm">StudentService</text>
+<line x1="10" y1="92" x2="310" y2="92" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="16" y="58" class="mb">-_registry: StudentRegistry</text>
+<text x="16" y="72" class="mb">-_notifier: Notifier</text>
+<text x="16" y="86" class="mb">-_policy: GradingPolicy</text>
+<text x="16" y="106" class="mb">+register(student: S) → S</text>
+<text x="16" y="120" class="mb">+register_from_payload(p: StudentPayload)</text>
+<text x="16" y="134" class="mb">+edit / transfer / post_result</text>
+<text x="16" y="148" class="mb">+find_by_id / find_by_last_name / find_in_group</text>
+<text x="16" y="162" class="mb">+average_of(id) / best_student(group)</text><rect x="335" y="10" width="250" height="130" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="335" y="10" width="250" height="34" rx="3" fill="#eaf6ef" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="460.0" y="23" class="st">«application service»</text>
+<text x="460.0" y="38" class="nm">ReportService</text>
+<line x1="335" y1="78" x2="585" y2="78" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="341" y="58" class="mb">-_registry: StudentRegistry</text>
+<text x="341" y="72" class="mb">-_policy: GradingPolicy</text>
+<text x="341" y="92" class="mb">+summaries() → list[StudentSummary]</text>
+<text x="341" y="106" class="mb">+ranking(group) → list[tuple[…]]</text>
+<text x="341" y="120" class="mb">+group_report() / scholarship_holders()</text>
+<text x="341" y="134" class="mb">+card(student) → str</text><rect x="760" y="10" width="330" height="60" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="760" y="10" width="330" height="34" rx="3" fill="#e8f0fb" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="925.0" y="23" class="st">«Protocol, runtime_checkable»</text>
+<text x="925.0" y="38" class="nm" font-style="italic">Notifier</text>
+<line x1="760" y1="50" x2="1090" y2="50" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="766" y="64" class="mb">+send(recipient, message) → None</text><rect x="700" y="100" width="175" height="48" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="700" y="100" width="175" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="787.5" y="116" class="nm">ConsoleNotifier</text>
+<line x1="700" y1="128" x2="875" y2="128" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="706" y="142" class="mb">+send(recipient, message)</text><rect x="895" y="100" width="195" height="62" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="895" y="100" width="195" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="992.5" y="116" class="nm">MemoryNotifier</text>
+<line x1="895" y1="142" x2="1090" y2="142" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="901" y="136" class="mb">+messages: list[tuple[str, str]]</text>
+<text x="901" y="156" class="mb">+send(recipient, message)</text><rect x="10" y="225" width="300" height="144" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="10" y="225" width="300" height="34" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="160.0" y="238" class="st">«aggregate root»</text>
+<text x="160.0" y="253" class="nm">StudentRegistry</text>
+<line x1="10" y1="293" x2="310" y2="293" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="16" y="273" class="mb">-_students: Repository[int, Student]</text>
+<text x="16" y="287" class="mb">-_groups: Repository[GroupCode, Group]</text>
+<text x="16" y="307" class="mb">+add_student(student: S) → S</text>
+<text x="16" y="321" class="mb">+get(id) / group(code) / groups()</text>
+<text x="16" y="335" class="mb">+find_by_last_name(name) → list[Student]</text>
+<text x="16" y="349" class="mb">+edit_student(…) / transfer(id, code)</text>
+<text x="16" y="363" class="mb">+best_student(policy, group) → Student | None</text><rect x="335" y="225" width="250" height="88" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="335" y="225" width="250" height="34" rx="3" fill="#e8f0fb" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="460.0" y="238" class="st">«abstract, generic»</text>
+<text x="460.0" y="253" class="nm" font-style="italic">Repository[K, T]</text>
+<line x1="335" y1="265" x2="585" y2="265" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="341" y="279" class="mb">+add / get / remove «abstract»</text>
+<text x="341" y="293" class="mb">+__iter__ / __len__ «abstract»</text>
+<text x="341" y="307" class="mb">+find(predicate) → list[T]</text><rect x="335" y="333" width="250" height="76" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="335" y="333" width="250" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="460.0" y="349" class="nm">InMemoryRepository[K, T]</text>
+<line x1="335" y1="389" x2="585" y2="389" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="341" y="369" class="mb">-_key: Callable[[T], K]</text>
+<text x="341" y="383" class="mb">-_items: dict[K, T]</text>
+<text x="341" y="403" class="mb">+__contains__ / __getitem__ / __repr__</text><rect x="610" y="225" width="480" height="102" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="610" y="225" width="480" height="34" rx="3" fill="#e8f0fb" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="850.0" y="238" class="st">«abstract»</text>
+<text x="850.0" y="253" class="nm" font-style="italic">GradingPolicy</text>
+<line x1="610" y1="279" x2="1090" y2="279" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="616" y="273" class="mb">+name: ClassVar[str]</text>
+<text x="616" y="293" class="mb">+average(results) → Grade | None «abstract»</text>
+<text x="616" y="307" class="mb">+create(name, …) «classmethod, фабрика»</text>
+<text x="616" y="321" class="mb">+available() → tuple[str, …]</text><rect x="610" y="350" width="130" height="48" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="610" y="350" width="130" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="675.0" y="366" class="nm">SimpleAverage</text>
+<line x1="610" y1="378" x2="740" y2="378" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="616" y="392" class="mb">+average(results)</text><rect x="750" y="350" width="180" height="48" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="750" y="350" width="180" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="840.0" y="366" class="nm">CreditWeightedAverage</text>
+<line x1="750" y1="378" x2="930" y2="378" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="756" y="392" class="mb">+average(results)</text><rect x="940" y="350" width="150" height="62" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="940" y="350" width="150" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="1015.0" y="366" class="nm">BestResultsAverage</text>
+<line x1="940" y1="392" x2="1090" y2="392" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="946" y="386" class="mb">-_best: int</text>
+<text x="946" y="406" class="mb">+average(results)</text><rect x="10" y="405" width="300" height="118" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="10" y="405" width="300" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="160.0" y="421" class="nm">Group</text>
+<line x1="10" y1="461" x2="310" y2="461" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="16" y="441" class="mb">-_code: GroupCode</text>
+<text x="16" y="455" class="mb">-_members: dict[int, Student]</text>
+<text x="16" y="475" class="mb">+code / curator / members «property»</text>
+<text x="16" y="489" class="mb">+add(student) / remove(id)</text>
+<text x="16" y="503" class="mb">+average(policy) / best(policy)</text>
+<text x="16" y="517" class="mb">__len__ / __iter__ / __contains__</text><rect x="335" y="440" width="250" height="158" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="335" y="440" width="250" height="34" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="460.0" y="453" class="st">«dataclass, entity»</text>
+<text x="460.0" y="468" class="nm">Student</text>
+<line x1="335" y1="536" x2="585" y2="536" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="341" y="488" class="mb">id: int</text>
+<text x="341" y="502" class="mb">first_name, last_name, email: str</text>
+<text x="341" y="516" class="mb">group: GroupCode</text>
+<text x="341" y="530" class="mb">record: AcademicRecord</text>
+<text x="341" y="550" class="mb">+full_name «property»</text>
+<text x="341" y="564" class="mb">+edit(…) / average(policy)</text>
+<text x="341" y="578" class="mb">+has_scholarship(policy) → bool</text>
+<text x="341" y="592" class="mb">__eq__ / __hash__ / __str__</text><rect x="335" y="625" width="130" height="48" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="335" y="625" width="130" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="400.0" y="641" class="nm">BudgetStudent</text>
+<line x1="335" y1="653" x2="465" y2="653" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="341" y="667" class="mb">+has_scholarship()</text><rect x="475" y="625" width="130" height="48" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="475" y="625" width="130" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="540.0" y="641" class="nm">ContractStudent</text>
+<line x1="475" y1="653" x2="605" y2="653" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="481" y="667" class="mb">funding: &#x27;contract&#x27;</text><rect x="610" y="430" width="240" height="104" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="610" y="430" width="240" height="22" rx="3" fill="#f6f6f4" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="730.0" y="446" class="nm">AcademicRecord</text>
+<line x1="610" y1="472" x2="850" y2="472" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="616" y="466" class="mb">-_results: dict[str, CourseResult]</text>
+<text x="616" y="486" class="mb">+record(result) / results «property»</text>
+<text x="616" y="500" class="mb">+average(policy) → Grade | None</text>
+<text x="616" y="514" class="mb">__len__ / __iter__ / __getitem__</text>
+<text x="616" y="528" class="mb">__contains__ / __repr__</text><rect x="870" y="430" width="220" height="88" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="870" y="430" width="220" height="34" rx="3" fill="#fdf3e3" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="980.0" y="443" class="st">«frozen dataclass»</text>
+<text x="980.0" y="458" class="nm">CourseResult</text>
+<line x1="870" y1="512" x2="1090" y2="512" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="876" y="478" class="mb">subject: str</text>
+<text x="876" y="492" class="mb">grade: Grade</text>
+<text x="876" y="506" class="mb">credits: int</text><rect x="870" y="550" width="220" height="102" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="870" y="550" width="220" height="34" rx="3" fill="#fdf3e3" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="980.0" y="563" class="st">«frozen value object»</text>
+<text x="980.0" y="578" class="nm">Grade</text>
+<line x1="870" y1="604" x2="1090" y2="604" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="876" y="598" class="mb">value: Decimal</text>
+<text x="876" y="618" class="mb">+of(value) «classmethod»</text>
+<text x="876" y="632" class="mb">+level «property»</text>
+<text x="876" y="646" class="mb">__lt__ / __str__</text><rect x="610" y="560" width="240" height="74" rx="3" fill="#fff" stroke="#3d3d3a" stroke-width="1.1"/>
+<rect x="610" y="560" width="240" height="34" rx="3" fill="#fdf3e3" stroke="#3d3d3a" stroke-width="1.1"/>
+<text x="730.0" y="573" class="st">«frozen value object»</text>
+<text x="730.0" y="588" class="nm">GroupCode</text>
+<line x1="610" y1="614" x2="850" y2="614" stroke="#3d3d3a" stroke-width="0.8"/>
+<text x="616" y="608" class="mb">value: str</text>
+<text x="616" y="628" class="mb">order=True, __str__</text><path d="M400.0,625.0 L400.0,611.5 L397.5,611.5 L397.5,598.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-end="url(#tri)"/><path d="M540.0,625.0 L540.0,611.5 L522.5,611.5 L522.5,598.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-end="url(#tri)"/><path d="M675.0,350.0 L675.0,338.5 L706.0,338.5 L706.0,327.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-end="url(#tri)"/><path d="M840.0,350.0 L840.0,338.5 L850.0,338.5 L850.0,327.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-end="url(#tri)"/><path d="M1015.0,350.0 L1015.0,338.5 L994.0,338.5 L994.0,327.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-end="url(#tri)"/><path d="M460.0,333.0 L460.0,323.0 L460.0,323.0 L460.0,313.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-end="url(#tri)"/><path d="M787.5,100.0 L787.5,85.0 L826.0,85.0 L826.0,70.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#tri)"/><path d="M992.5,100.0 L992.5,85.0 L1024.0,85.0 L1024.0,70.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#tri)"/><path d="M160.0,168.0 L160.0,196.5 L160.0,196.5 L160.0,225.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#open)"/><text x="165.0" y="210.75" class="lb" text-anchor="start">«inject»</text><path d="M295.0,10.0 L295.0,-6.0 L925.0,-6.0 L925.0,10.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#open)"/><text x="560" y="-9" class="lb" text-anchor="start">«inject»</text><path d="M360.0,140.0 L360.0,196.0 L289.0,196.0 L289.0,225.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#open)"/><path d="M585.0,75.0 L660.0,75.0 L660.0,225.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#open)"/><text x="590" y="68" class="lb" text-anchor="start">«inject»</text><path d="M310.0,253.8 L322.5,253.8 L322.5,242.6 L335.0,242.6" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#open)"/><text x="314" y="236" class="lb" text-anchor="start">×2</text><path d="M160.0,369.0 L160.0,387.0 L160.0,387.0 L160.0,405.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-start="url(#dhollow)" marker-end="url(#open)"/><text x="165.0" y="396.0" class="lb" text-anchor="start">0..*</text><path d="M310.0,458.1 L322.5,458.1 L322.5,463.7 L335.0,463.7" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-start="url(#dhollow)" marker-end="url(#open)"/><path d="M585.0,471.6 L597.5,471.6 L597.5,461.2 L610.0,461.2" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-start="url(#dfill)" marker-end="url(#open)"/><path d="M850.0,482.0 L860.0,482.0 L860.0,474.0 L870.0,474.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-start="url(#dfill)" marker-end="url(#open)"/><text x="851" y="465" class="lb" text-anchor="start">0..*</text><path d="M980.0,518.0 L980.0,534.0 L980.0,534.0 L980.0,550.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-start="url(#dfill)" marker-end="url(#open)"/><path d="M585.0,566.4 L597.5,566.4 L597.5,597.0 L610.0,597.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" marker-start="url(#dfill)" marker-end="url(#open)"/><path d="M745.0,430.0 L745.0,378.5 L745.0,378.5 L745.0,327.0" fill="none" stroke="#3d3d3a" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#open)"/><text x="750" y="420" class="lb" text-anchor="start">average(policy)</text></g></svg><p class="fcap">Рисунок 1 – UML class diagram моделі (◇ агрегація, ◆ композиція, △ наслідування, пунктир із △ – реалізація Protocol, пунктирна стрілка – використання або «inject»)</p></div></section>
+<h1>3. Inheritance, composition, encapsulation</h1>
+<p><b>Inheritance</b> застосовано там, де є справжнє is-a. <code>GradingPolicy</code> – ABC з абстрактним <code>average</code>; кожен підклас оголошується з іменем (<code>class SimpleAverage(GradingPolicy, name="simple")</code>) і реєструється через <code>__init_subclass__</code>, тому фабрика <code>GradingPolicy.create(name)</code> знає всі стратегії без жодного списку. <code>BudgetStudent</code> і <code>ContractStudent</code> є студентами: базовий <code>has_scholarship</code> повертає False, а бюджетний підклас перевизначає його.</p>
+<pre class="code">class GradingPolicy(ABC):
+    name: ClassVar[str]
+    _registry: ClassVar[dict[str, type["GradingPolicy"]]] = {}
+
+    def __init_subclass__(cls, *, name: str, **kwargs: Any) -&gt; None:
+        super().__init_subclass__(**kwargs)
+        cls.name = name
+        GradingPolicy._registry[name] = cls
+
+    @classmethod
+    def create(cls, name: str, **options: Any) -&gt; "GradingPolicy":
+        try:
+            policy_class = cls._registry[name]
+        except KeyError:
+            raise ValueError(f"Невідома політика оцінювання: {name!r}") from None
+        return policy_class(**options)
+
+    @abstractmethod
+    def average(self, results: Iterable[CourseResult]) -&gt; Grade | None: ...
+
+    ...
+
+class CreditWeightedAverage(GradingPolicy, name="weighted"):
+    def average(self, results: Iterable[CourseResult]) -&gt; Grade | None:
+        items = list(results)
+        credits = sum(result.credits for result in items)
+        if not credits:
+            return None
+        points = sum((result.grade.value * result.credits for result in items), Decimal(0))
+        return Grade(points / credits)
+
+# class BudgetStudent(Student)
+def has_scholarship(self, policy: GradingPolicy) -&gt; bool:
+    average = self.average(policy)
+    return average is not None and average &gt;= SCHOLARSHIP_MINIMUM</pre>
+<p><b>Composition</b> (has-a): студент має <code>AcademicRecord</code> і <code>GroupCode</code>, запис має <code>CourseResult</code>, група має студентів, реєстр має два репозиторії, сервіс – реєстр, notifier і політику. <b>Encapsulation</b>: <code>full_name</code> – property без setter, <code>Group.members</code> і <code>AcademicRecord.results</code> повертають копію-кортеж, а студент потрапляє в групу лише через <code>Group.add</code>, який узгоджує поле <code>student.group</code>.</p>
+<pre class="code keep">@property
+def full_name(self) -&gt; str:
+    return f"{self.first_name} {self.last_name}"
+
+@property
+def members(self) -&gt; tuple[Student, ...]:
+    return tuple(self._members.values())
+
+def add(self, student: Student) -&gt; None:
+    if student.id in self._members:
+        raise DuplicateKeyError(f"Студент {student.id} уже є в групі {self._code}")
+    self._members[student.id] = student
+    student.group = self._code</pre>
+<h1>4. Dataclass і immutable value object</h1>
+<p><code>Grade</code> – frozen dataclass зі <code>slots=True</code>: незмінний, hashable, порівнюється за значенням. У <code>__post_init__</code> перевіряється діапазон 0–100 і значення нормалізується до сотих; <code>total_ordering</code> добудовує <code>&lt;= &gt; &gt;=</code> з <code>__lt__</code>, <code>of()</code> свідомо не приймає float, а <code>level</code> – property з рівнем успішності. <code>Student</code> – змінюваний dataclass з <code>eq=False</code>: рівність і хеш визначає лише <code>id</code> (entity), а поля перевіряються в <code>__post_init__</code>.</p>
+<pre class="code">@total_ordering
+@dataclass(frozen=True, slots=True)
+class Grade:
+    value: Decimal
+
+    def __post_init__(self) -&gt; None:
+        if not isinstance(self.value, Decimal):
+            raise TypeError("value має бути Decimal; використовуйте Grade.of()")
+        if not self.value.is_finite() or not 0 &lt;= self.value &lt;= MAX_POINTS:
+            raise InvalidGradeError(f"Оцінка поза межами 0-100: {self.value}")
+        object.__setattr__(self, "value", self.value.quantize(HUNDREDTH, ROUND_HALF_UP))
+
+    @classmethod
+    def of(cls, value: Decimal | int | str) -&gt; Self:
+        if isinstance(value, float):
+            raise TypeError("float не підходить для оцінок: використовуйте str або Decimal")
+        try:
+            return cls(Decimal(value))
+        except InvalidOperation:
+            raise InvalidGradeError(f"Оцінка не є числом: {value!r}") from None
+
+    @property
+    def level(self) -&gt; str:
+        return next(label for threshold, label in LEVELS if self.value &gt;= threshold)
+
+    def __lt__(self, other: "Grade") -&gt; bool:
+        return self.value &lt; other.value
+
+    ...</pre>
+<pre class="code">@dataclass(eq=False, slots=True)
+class Student:
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    group: GroupCode
+    record: AcademicRecord = field(default_factory=AcademicRecord)
+    funding: ClassVar[str] = "none"
+
+    def __post_init__(self) -&gt; None:
+        if self.id &lt;= 0:
+            raise InvalidStudentDataError("id студента має бути додатним")
+        _check_person(self.first_name, self.last_name, self.email)
+
+    def edit(
+        self,
+        *,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        email: str | None = None,
+    ) -&gt; None:
+        new_first = self.first_name if first_name is None else first_name
+        new_last = self.last_name if last_name is None else last_name
+        new_email = self.email if email is None else email
+        _check_person(new_first, new_last, new_email)
+        self.first_name, self.last_name, self.email = new_first, new_last, new_email
+
+    def __eq__(self, other: object) -&gt; bool:
+        return isinstance(other, Student) and other.id == self.id
+
+    ...</pre>
+<h1>5. ABC, Protocol, generics і TypedDict</h1>
+<p><code>Repository</code> – ABC (nominal typing) і водночас generic class. <code>K</code> – constrained TypeVar (ключ лише <code>int</code> або <code>GroupCode</code>), <code>T</code> – звичайний TypeVar, <code>S</code> у реєстрі й сервісі – bound TypeVar: <code>register(BudgetStudent(...))</code> повертає саме <code>BudgetStudent</code>.</p>
+<pre class="code">K = TypeVar("K", int, GroupCode)
+T = TypeVar("T")
+S = TypeVar("S", bound=Student)
+
+class Repository(ABC, Generic[K, T]):
+    @abstractmethod
+    def add(self, item: T) -&gt; None: ...
+
+    @abstractmethod
+    def get(self, key: K) -&gt; T | None: ...
+
+    @abstractmethod
+    def remove(self, key: K) -&gt; bool: ...
+
+    @abstractmethod
+    def __iter__(self) -&gt; Iterator[T]: ...
+
+    @abstractmethod
+    def __len__(self) -&gt; int: ...
+
+    def find(self, predicate: Callable[[T], bool]) -&gt; list[T]:
+        return [item for item in self if predicate(item)]</pre>
+<p><code>Notifier</code> – Protocol (structural typing): адаптери його не успадковують, але сумісні за сигнатурою <code>send</code>; завдяки <code>@runtime_checkable</code> працює <code>isinstance</code>. Три вузькі протоколи <code>Parser</code>, <code>Validator</code>, <code>Formatter</code> – interface segregation. TypedDict описує зовнішній JSON-payload студента; під час виконання це звичайний dict, тому його перетворює на доменний об'єкт <code>student_from_payload</code>.</p>
+<pre class="code keep">@runtime_checkable
+class Notifier(Protocol):
+    def send(self, recipient: str, message: str) -&gt; None: ...
+
+class StudentPayload(TypedDict):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    group: str
+    kind: Literal["budget", "contract"]
+    results: NotRequired[list[ResultPayload]]</pre>
+<p class="tcap">Таблиця 3 – Використані dunder methods</p>
+<table class=""><thead><tr><th>Клас</th><th>Dunder methods</th><th>Призначення</th></tr></thead><tbody><tr><td><code>Grade</code></td><td><code>__lt__ __str__ __post_init__</code></td><td>порядок (total_ordering), вивід, нормалізація</td></tr><tr><td><code>Student</code></td><td><code>__eq__ __hash__ __str__ __post_init__</code></td><td>тотожність за id, вивід, валідація</td></tr><tr><td><code>AcademicRecord</code></td><td><code>__len__ __iter__ __getitem__ __contains__ __repr__</code></td><td>custom collection: len, for, record['Математика'], in</td></tr><tr><td><code>Group</code></td><td><code>__len__ __iter__ __contains__ __repr__</code></td><td><code>3 in group</code>, <code>for student in group</code></td></tr><tr><td><code>InMemoryRepository</code></td><td><code>__len__ __iter__ __contains__ __getitem__</code></td><td><code>1 in repo</code>, <code>repo[key]</code></td></tr><tr><td><code>GradingPolicy</code></td><td><code>__init_subclass__</code></td><td>автоматична реєстрація підкласів у фабриці</td></tr></tbody></table>
+<h1>6. Application service, dependency injection і SOLID</h1>
+<p><code>StudentService</code> отримує реєстр, notifier і політику через конструктор і залежить лише від абстракцій; конкретні класи створюються в одному місці – composition root (<code>build_registry</code>, <code>build_services</code>). Один реєстр можна під'єднати до сервісів із різними notifier.</p>
+<pre class="code">def __init__(
+    self,
+    registry: StudentRegistry,
+    notifier: Notifier,
+    policy: GradingPolicy,
+) -&gt; None:
+    self._registry = registry
+    self._notifier = notifier
+    self._policy = policy
+
+def register(self, student: S) -&gt; S:
+    self._registry.add_student(student)
+    self._notify(student, f"вас зараховано до групи {student.group} ({student.funding})")
+    return student
+
+def build_registry() -&gt; StudentRegistry:
+    students = InMemoryRepository[int, Student](key=lambda student: student.id)
+    groups = InMemoryRepository[GroupCode, Group](key=lambda group: group.code)
+    return StudentRegistry(students, groups)
+
+def build_services(
+    registry: StudentRegistry, notifier: Notifier, policy: GradingPolicy
+) -&gt; tuple[StudentService, ReportService]:
+    return StudentService(registry, notifier, policy), ReportService(registry, policy)</pre>
+<p class="tcap">Таблиця 4 – Принципи SOLID у моделі</p>
+<table class=""><thead><tr><th>Принцип</th><th>Де реалізовано</th></tr></thead><tbody><tr><td>SRP</td><td><code>StudentRegistry</code> – інваріанти складу груп, <code>StudentService</code> – сценарії та сповіщення, <code>ReportService</code> – звіти, <code>GradingPolicy</code> – обчислення, <code>Grade</code> – валідація оцінки</td></tr><tr><td>OCP</td><td>нова стратегія – новий підклас з <code>name=...</code>: фабрика, реєстр, звіти не змінюються; новий канал сповіщень – новий клас із <code>send</code></td></tr><tr><td>LSP</td><td>обидва види студентів виконують контракт <code>Student</code>; усі стратегії повертають <code>Grade | None</code> (None для порожнього запису) і взаємозамінні</td></tr><tr><td>ISP</td><td><code>Parser</code>, <code>Validator</code>, <code>Formatter</code> – окремі протоколи; <code>Notifier</code> має один метод</td></tr><tr><td>DIP</td><td>сервіси залежать від <code>Notifier</code> (Protocol), <code>GradingPolicy</code> і <code>Repository</code> (ABC), а не від конкретних класів</td></tr></tbody></table>
+<h1>7. Виконання програми</h1>
+<div class="term"><span class="ps">PS C:\Github\prof_python\Lab_04&gt;</span> python -m domain_app.main
+ЛР4, варіант 1: система обліку студентів
+
+Завантажено 10 студентів у 3 групах; повідомлень у MemoryNotifier: 13
+isinstance(ConsoleNotifier(), Notifier) = True
+Політики оцінювання (фабрика GradingPolicy.create): ('simple', 'weighted', 'best')
+
+Пошук:
+  за ID 3:  3 Ірина Бондар (PI-22, budget)
+  за прізвищем 'мельник': ['Олег Мельник', 'Максим Мельник']
+  у групі PI-22: ['Ірина Бондар', 'Марія Бойко', 'Софія Гнатюк']
+
+Середній бал Анни Коваль за різними політиками (strategy):
+  simple    -&gt; 91.50
+  weighted  -&gt; 92.04
+  best      -&gt; 92.50
+  найкращий студент (simple): Ірина Бондар; у групі PI-23: Катерина Лисенко
+  найкращий студент (weighted): Ірина Бондар; у групі PI-23: Катерина Лисенко
+
+Стипендія (поліморфний has_scholarship, поріг для BudgetStudent - 82):
+  ['Анна Коваль', 'Ірина Бондар', 'Андрій Шевченко', 'Катерина Лисенко']
+  види студентів: ['BudgetStudent', 'ContractStudent']; BudgetStudent - підклас Student: True
+
+Редагування, переведення та перездача (повідомлення йдуть у ConsoleNotifier):
+  [повідомлення -&gt; oleh.melnyk@lnu.edu.ua] Олег Мельник: дані оновлено: Олег Мельник, oleh.melnyk@lnu.edu.ua
+  [повідомлення -&gt; student10@lnu.edu.ua] Максим Мельник: вас переведено до групи PI-22
+  [повідомлення -&gt; student8@lnu.edu.ua] Дмитро Ткаченко: Математика: 70.00, середній бал 63.90
+  розміри груп після переведення: {'PI-21': 3, 'PI-22': 4, 'PI-23': 3}
+
+Помилки предметної області:
+  оцінка 105: InvalidGradeError: Оцінка поза межами 0-100: 105
+  оцінка 'abc': InvalidGradeError: Оцінка не є числом: 'abc'
+  невідомий студент 99: StudentNotFoundError: Студента 99 не знайдено
+  дубль id 1: DuplicateKeyError: Студент із id 1 уже зареєстрований
+  код групи PI-2: InvalidGroupCodeError: Некоректний код групи: 'PI-2'
+  порожнє ім'я: InvalidStudentDataError: Ім'я та прізвище не можуть бути порожніми
+  група PI-99: GroupNotFoundError: Групу PI-99 не знайдено
+
+Звіти (ReportService):
+  summaries -&gt; TypedDict:
+    {'id': 1, 'full_name': 'Анна Коваль', 'group': 'PI-21', 'kind': 'budget', 'average': '91.50', 'results': 3}
+    {'id': 2, 'full_name': 'Олег Мельник', 'group': 'PI-21', 'kind': 'contract', 'average': '84.00', 'results': 3}
+    {'id': 3, 'full_name': 'Ірина Бондар', 'group': 'PI-22', 'kind': 'budget', 'average': '95.20', 'results': 3}
+  топ-4: Бондар 95.20, Лисенко 93.10, Коваль 91.50, Шевченко 88.70
+  {'group': 'PI-21', 'students': 3, 'average': '88.07', 'best': 'Анна Коваль'}
+  {'group': 'PI-22', 'students': 4, 'average': '77.98', 'best': 'Ірина Бондар'}
+  {'group': 'PI-23', 'students': 3, 'average': '76.47', 'best': 'Катерина Лисенко'}
+Картка: Ірина Бондар, PI-22, середній бал 95.20
+  Математика: 94.00 (5 кр.)
+  Програмування: 98.00 (6 кр.)
+  Англійська: 93.60 (3 кр.)
+
+Dunder methods:
+  repr(record)=AcademicRecord(results=3), len=3, 'Математика' in record: True, record['Математика'] -&gt; Математика: 94.00 (5 кр.)
+  Grade: max(...)=95.20, Grade.of('90') &gt;= Grade.of('89.99'): True
+  Group: Group(code='PI-22', students=4), 3 in group: True
+  Student: == за id: True, hash збігається: True, рівень: відмінно
+
+Inheritance vs composition (рядок із ЛР3):
+  inheritance (CsvRowProcessor): 3: Ірина Бондар, PI-22, 95.20 (відмінно)
+  composition CsvParser  + TextFormatter : 3: Ірина Бондар, PI-22, 95.20 (відмінно)
+  composition CsvParser  + ShortFormatter: PI-22 #3 95.20
+  composition JsonParser + TextFormatter : 12: Оксана Мороз, PI-24, 97.00 (відмінно)
+  composition JsonParser + ShortFormatter: PI-24 #12 97.00</div>
+<p class="fcap">Рисунок 2 – Виконання демонстраційного сценарію</p>
+<p>Перевірка вручну для Анни Коваль (90/5 кредитів, 95/6, 89.5/3): простий середній (90 + 95 + 89.5) / 3 = 91.50; зважений (90·5 + 95·6 + 89.5·3) / 14 = 92.04; середнє двох найкращих (95 + 90) / 2 = 92.50. Після переведення Максима до PI-22 середній бал групи PI-21 – (91.50 + 84.00 + 88.70) / 3 = 88.07, а Дмитро після перездачі математики на 70 має (70 + 62 + 59.7) / 3 = 63.90.</p>
+<h1>8. Статична перевірка типів (mypy)</h1>
+<p>Використано mypy зі <code>strict = true</code> (налаштування в <code>pyproject.toml</code>, <code>mypy_path = "src"</code>). Перевірка <code>src</code> і <code>tests</code> проходить без зауважень. Обов'язковий експеримент: у файл <code>experiments/type_errors.py</code> навмисно внесено три помилки з методички та чотири порушення доменного контракту:</p>
+<div class="term"><span class="ps">PS C:\Github\prof_python\Lab_04&gt;</span> mypy experiments/type_errors.py
+experiments\type_errors.py:6: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+experiments\type_errors.py:10: error: Incompatible return value type (got "str", expected "int")  [return-value]
+experiments\type_errors.py:14: error: Argument 1 to "add" of "InMemoryRepository" has incompatible type "Group"; expected "Student"  [arg-type]
+experiments\type_errors.py:17: error: Property "full_name" defined in "Student" is read-only  [misc]
+experiments\type_errors.py:18: error: Argument 1 to "of" of "Grade" has incompatible type "float"; expected "Decimal | int | str"  [arg-type]
+experiments\type_errors.py:19: error: Cannot instantiate abstract class "GradingPolicy" with abstract attribute "average"  [abstract]
+experiments\type_errors.py:20: error: Value of type variable "K" of "InMemoryRepository" cannot be "str"  [type-var]
+Found 7 errors in 1 file (checked 1 source file)</div>
+<p class="tcap">Таблиця 5 – Знайдені помилки та виправлення (experiments/type_errors_fixed.py)</p>
+<table class=""><thead><tr><th>№</th><th>Помилка</th><th>Виправлення</th></tr></thead><tbody><tr><td>1</td><td><code>student_id: int = "1"</code></td><td><code>student_id: int = 1</code></td></tr><tr><td>2</td><td><code>def total() -&gt; int: return "100"</code></td><td><code>return 100</code></td></tr><tr><td>3</td><td><code>Group</code> у <code>InMemoryRepository[int, Student]</code></td><td>окремий <code>InMemoryRepository[GroupCode, Group]</code></td></tr><tr><td>4</td><td>присвоєння <code>student.full_name</code> (property без setter)</td><td><code>student.edit(first_name=...)</code></td></tr><tr><td>5</td><td><code>Grade.of(91.5)</code> – float</td><td><code>Grade.of("91.5")</code></td></tr><tr><td>6</td><td>екземпляр абстрактного <code>GradingPolicy</code></td><td><code>SimpleAverage()</code> з анотацією <code>GradingPolicy</code></td></tr><tr><td>7</td><td>ключ <code>str</code> для constrained <code>K</code></td><td><code>InMemoryRepository[int, Student]</code></td></tr></tbody></table>
+<div class="term"><span class="ps">PS C:\Github\prof_python\Lab_04&gt;</span> mypy experiments/type_errors_fixed.py experiments/di_comparison.py
+Success: no issues found in 2 source files</div>
+<div class="term"><span class="ps">PS C:\Github\prof_python\Lab_04&gt;</span> mypy   # src і tests, strict
+Success: no issues found in 15 source files</div>
+<h1>9. Експериментальна частина</h1>
+<p><b>Dependency injection.</b> Варіант A (<code>HardwiredStudentService</code>) сам створює реєстр і <code>ConsoleNotifier</code>; варіант B – <code>StudentService</code> з DI. Обидва виконують однакову реєстрацію студента:</p>
+<div class="term"><span class="ps">PS C:\Github\prof_python\Lab_04&gt;</span> python experiments/di_comparison.py
+A (hardwired): [повідомлення -&gt; anna@example.com] Анна Коваль: вас зараховано
+B (DI):        [('anna@example.com', 'Анна Коваль: вас зараховано до групи PI-21 (budget)')]</div>
+<p class="tcap">Таблиця 6 – Порівняння варіантів A і B</p>
+<table class=""><thead><tr><th>Критерій</th><th>A: залежність усередині</th><th>B: dependency injection</th></tr></thead><tbody><tr><td>тестування</td><td>лише перехопленням stdout і розбором тексту</td><td><code>MemoryNotifier</code>: повідомлення доступні як дані</td></tr><tr><td>заміна</td><td>зміна коду класу</td><td>інший об'єкт у конструкторі</td></tr><tr><td>DIP</td><td>порушено: залежить від конкретних класів</td><td>виконано: Protocol і ABC</td></tr><tr><td>coupling</td><td>2 конкретні класи всередині сервісу</td><td>0 – лише абстракції</td></tr></tbody></table>
+<p><b>Inheritance vs composition.</b> Обробку рядка студента (parse → validate → format, формат ЛР3) реалізовано двома способами: <code>CsvRowProcessor</code> успадковує template method від <code>BaseRowProcessor</code>, а <code>RowProcessor(parser, validator, formatter)</code> складається з трьох компонентів-протоколів; обидва дають однаковий результат (перевірено тестом).</p>
+<p class="tcap">Таблиця 7 – Порівняння inheritance і composition</p>
+<table class=""><thead><tr><th>Критерій</th><th>Inheritance</th><th>Composition</th></tr></thead><tbody><tr><td>coupling</td><td>підклас залежить від деталей template method базового класу</td><td>процесор знає лише три протоколи</td></tr><tr><td>extensibility</td><td>n форматів × m форматувань = n·m підкласів</td><td>n + m незалежних класів (2 parsers + 2 formatters = 4 комбінації)</td></tr><tr><td>testability</td><td>тестується лише весь процесор</td><td>кожен компонент тестується окремо, решту можна підмінити</td></tr><tr><td>reuse</td><td>форматування прив'язане до ієрархії</td><td><code>ShortFormatter</code> працює з будь-яким parser</td></tr></tbody></table>
+<h1>10. Перевірка правильності</h1>
+<p>56 тестів (unittest) перевіряють value objects і їх межі, стратегії оцінювання на відомих даних, фабрику, custom collection, entity-рівність, поліморфну стипендію, групу, generic-репозиторій, реєстр (дублікати, переведення, найкращий), сервіси з <code>MemoryNotifier</code>, звіти, TypedDict, runtime_checkable Protocol, рівність результатів inheritance і composition та весь демонстраційний сценарій. Усі перевірки запускає CI-like команда:</p>
+<div class="term"><span class="ps">PS C:\Github\prof_python\Lab_04&gt;</span> python tools/check.py
+== ruff check
+All checks passed!
+== ruff format
+15 files already formatted
+== mypy --strict
+Success: no issues found in 15 source files
+== unittest
+........................................................
+----------------------------------------------------------------------
+Ran 56 tests in 0.003s
+
+OK
+ALL CHECKS PASSED</div>
+<h1>Висновки</h1>
+<p>Побудовано типізовану об'єктну модель системи обліку студентів: entity <code>Student</code> з двома підкласами, група й академічний запис як колекції, value objects <code>Grade</code>, <code>GroupCode</code>, <code>CourseResult</code>, ABC-стратегії оцінювання з фабрикою, generic-репозиторій, Protocol для сповіщень і application services із dependency injection. Наслідування використано лише для справжнього is-a, решту поведінки зібрано композицією, що підтвердило порівняння: DI і композиція зменшують coupling і спрощують тестування. mypy у strict-режимі знайшов усі 7 навмисних помилок, а код проєкту й тестів проходить перевірку без зауважень.</p></body></html>
